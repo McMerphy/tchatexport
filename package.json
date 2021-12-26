@@ -10,5 +10,10 @@
   "license": "ISC",
   "devDependencies": {
     "eslint": "^8.5.0"
+  },
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "input": "^1.0.1",
+    "telegram": "^2.1.0"
   }
 }
