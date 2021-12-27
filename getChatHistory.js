@@ -9,9 +9,25 @@ const input = require('input')
 const { Api } = require("telegram/tl")
 const fs = require('fs')
 
+let stringSessionStr = ""
+try {
+    if(fs.existsSync(process.env.SESSION_FILE))
+    {
+        let sessionJson= JSON.parse(fs.readFileSync(process.env.SESSION_FILE))
+        stringSessionStr = sessionJson.stringSession
+        console.log("String session: ", stringSessionStr)
+    }
+} catch (error) {
+    console.log('Can\'t read session file')
+    console.log(error)
+}
 
-const stringSession = new StringSession('1AgAOMTQ5LjE1NC4xNjcuNTEBu62tC189fAqBYynFRvsZZYurILhlFpbzQi10KfXdE0ppudDoSs28ZGl6ncrKWwDwf+SyerccFa18IePsqYfFaBSikCdkeFZg0aPLjpVimWe95HNVopvi6C6H0egk/NOqbWzfk6E3ExexyUex4YQXusnAE69p9K0mCctct+d3/AMU5LtrwkT9/BoXW8ueiyxJZvuQ17Czv+lAYvjyeID0IkmaHLMHbLKXJ9IXTbXSDpHJFRAtr8uFVF1pj0euT4OWvKanVYFT52ezxhuVxjTxjPW8HmsV4uQXx2GvtVI9aB7Z9QJ/riqIxA/u3HVYzTZgE+ua9aOE7dbhW/bOyiqo2Xo='); // fill this later with the value from session.save()
-(async () => {
+// const stringSession = new StringSession('1AgAOMTQ5LjE1NC4xNjcuNTEBu62tC189fAqBYynFRvsZZYurILhlFpbzQi10KfXdE0ppudDoSs28ZGl6ncrKWwDwf+SyerccFa18IePsqYfFaBSikCdkeFZg0aPLjpVimWe95HNVopvi6C6H0egk/NOqbWzfk6E3ExexyUex4YQXusnAE69p9K0mCctct+d3/AMU5LtrwkT9/BoXW8ueiyxJZvuQ17Czv+lAYvjyeID0IkmaHLMHbLKXJ9IXTbXSDpHJFRAtr8uFVF1pj0euT4OWvKanVYFT52ezxhuVxjTxjPW8HmsV4uQXx2GvtVI9aB7Z9QJ/riqIxA/u3HVYzTZgE+ua9aOE7dbhW/bOyiqo2Xo='); // fill this later with the value from session.save()
+const stringSession = new StringSession(stringSessionStr)
+
+
+
+;(async () => {
     console.log('Loading interactive example...')
     const client = new TelegramClient(stringSession,
         parseInt(process.env.TELEGRAM_API_ID),
@@ -23,6 +39,9 @@ const stringSession = new StringSession('1AgAOMTQ5LjE1NC4xNjcuNTEBu62tC189fAqBYy
         phoneCode: async () => await input.text('Code ?'),
         onError: (err) => console.log(err),
     })
+    fs.writeFileSync('./session.json', JSON.stringify({
+        stringSession: client.session.save()
+    }, null, 2), 'utf-8')
     console.log('You should now be connected.')
     console.log(client.session.save())
     
@@ -40,7 +59,9 @@ const stringSession = new StringSession('1AgAOMTQ5LjE1NC4xNjcuNTEBu62tC189fAqBYy
         do {
             const history = await client.invoke(
                 new Api.messages.GetHistory({
-                    peer: process.env.PEER_ID,
+                    peer: new Api.InputPeerChat({
+                        chatId: parseInt(process.env.PEER_ID)
+                    }),
                     offsetId: offsetId,
                     offsetDate: 0,
                     addOffset: 0,
@@ -74,7 +95,5 @@ const stringSession = new StringSession('1AgAOMTQ5LjE1NC4xNjcuNTEBu62tC189fAqBYy
     }
 
     console.log('finished')
-
-    client.stop()
 
 })()
