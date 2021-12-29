@@ -1,51 +1,26 @@
 /* eslint-disable no-undef */
-
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 // Load env variables
-require('dotenv').config({ path: `${__dirname}/.env` })
 
-const { TelegramClient } = require('telegram')
-const { StringSession } = require('telegram/sessions')
-const input = require('input')
-const { Api } = require("telegram/tl")
-const fs = require('fs')
+// config.js
+import dotenv from "dotenv";
+const cwd = process.cwd()
+dotenv.config({ path: `${cwd}/.env` });
 
-let stringSessionStr = ""
-try {
-    if(fs.existsSync(process.env.SESSION_FILE))
-    {
-        let sessionJson= JSON.parse(fs.readFileSync(process.env.SESSION_FILE))
-        stringSessionStr = sessionJson.stringSession
-        console.log("String session: ", stringSessionStr)
-    }
-} catch (error) {
-    console.log('Can\'t read session file')
-    console.log(error)
-}
+import { TelegramClient } from 'telegram'
+import { StringSession } from "telegram/sessions/index.js"
+import input from "input"
+import { Api } from "telegram/tl/index.js"
+import fs from "fs"
+/* eslint-disable no-undef */
 
-// const stringSession = new StringSession('1AgAOMTQ5LjE1NC4xNjcuNTEBu62tC189fAqBYynFRvsZZYurILhlFpbzQi10KfXdE0ppudDoSs28ZGl6ncrKWwDwf+SyerccFa18IePsqYfFaBSikCdkeFZg0aPLjpVimWe95HNVopvi6C6H0egk/NOqbWzfk6E3ExexyUex4YQXusnAE69p9K0mCctct+d3/AMU5LtrwkT9/BoXW8ueiyxJZvuQ17Czv+lAYvjyeID0IkmaHLMHbLKXJ9IXTbXSDpHJFRAtr8uFVF1pj0euT4OWvKanVYFT52ezxhuVxjTxjPW8HmsV4uQXx2GvtVI9aB7Z9QJ/riqIxA/u3HVYzTZgE+ua9aOE7dbhW/bOyiqo2Xo='); // fill this later with the value from session.save()
-const stringSession = new StringSession(stringSessionStr)
-
+import { setup_tg_client  } from "./setupFunctions.js"
 
 
 ;(async () => {
-    console.log('Loading interactive example...')
-    const client = new TelegramClient(stringSession,
-        parseInt(process.env.TELEGRAM_API_ID),
-        process.env.TELEGRAM_API_HASH,
-        { connectionRetries: 5 })
-    await client.start({
-        phoneNumber: () => { return "+375445886513" },
-        password: () => { return "9095903" },
-        phoneCode: async () => await input.text('Code ?'),
-        onError: (err) => console.log(err),
-    })
-    fs.writeFileSync('./session.json', JSON.stringify({
-        stringSession: client.session.save()
-    }, null, 2), 'utf-8')
-    console.log('You should now be connected.')
-    console.log(client.session.save())
-    
-    console.log("Export chat history...")
+    let client = await setup_tg_client()
+
 
     let fileIndex = 0
     let offsetId = 0
@@ -54,6 +29,7 @@ const stringSession = new StringSession(stringSessionStr)
     fs.mkdirSync(dialogsDir, {
         recursive: true
     })
+    let messages = []
 
     try {
         do {
