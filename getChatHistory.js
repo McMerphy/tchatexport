@@ -8,9 +8,6 @@ import dotenv from "dotenv";
 const cwd = process.cwd()
 dotenv.config({ path: `${cwd}/.env` });
 
-import { TelegramClient } from 'telegram'
-import { StringSession } from "telegram/sessions/index.js"
-import input from "input"
 import { Api } from "telegram/tl/index.js"
 import fs from "fs"
 /* eslint-disable no-undef */
